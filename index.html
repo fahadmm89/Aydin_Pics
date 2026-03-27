@@ -4,339 +4,613 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Aydin's Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0c0c0c;
+      --surface: #141414;
+      --accent: #c9a96e;
+      --accent-soft: rgba(201,169,110,0.15);
+      --text: #e8e0d5;
+      --muted: #5a5550;
+      --new: #e8a0b4;
+      --new-soft: rgba(232,160,180,0.12);
+    }
+
+    html { scroll-behavior: smooth; }
 
     body {
-      background: #0f0f0f;
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
       min-height: 100vh;
+    }
+
+    /* ── Ambient background orbs ── */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before {
+      width: 600px; height: 600px;
+      top: -200px; left: -200px;
+      background: radial-gradient(circle, rgba(201,169,110,0.06) 0%, transparent 70%);
+    }
+    body::after {
+      width: 500px; height: 500px;
+      bottom: -100px; right: -100px;
+      background: radial-gradient(circle, rgba(232,160,180,0.06) 0%, transparent 70%);
     }
 
     /* ── Header ── */
     header {
-      padding: 28px 20px 16px;
+      position: relative;
+      z-index: 1;
       text-align: center;
-      background: linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%);
+      padding: 56px 24px 40px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .header-eyebrow {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
     }
     header h1 {
-      font-size: 1.8rem;
-      font-weight: 700;
-      letter-spacing: -0.5px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3rem, 8vw, 5.5rem);
+      font-weight: 300;
+      letter-spacing: -1px;
+      line-height: 1;
+      color: var(--text);
     }
-    header h1 span { color: #ff6b8a; }
-    header p {
-      margin-top: 4px;
-      font-size: 0.82rem;
-      color: #666;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
+    header h1 em {
+      font-style: italic;
+      color: var(--accent);
     }
-
-    /* ── Section labels ── */
-    .section-label {
-      padding: 20px 16px 10px;
-      font-size: 0.72rem;
-      font-weight: 700;
+    .header-sub {
+      margin-top: 16px;
+      font-size: 0.78rem;
+      color: var(--muted);
       letter-spacing: 1.5px;
       text-transform: uppercase;
-      color: #555;
     }
-    .section-label.new { color: #ff6b8a; }
 
-    /* ── Grid (shared for both new and older) ── */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
-      padding: 0 4px 4px;
+    /* ── Section header ── */
+    .section-header {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 48px 24px 20px;
     }
-    @media (min-width: 600px) {
-      .grid { grid-template-columns: repeat(4, 1fr); }
+    .section-header .label {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      white-space: nowrap;
     }
-    .grid-card {
-      aspect-ratio: 1;
+    .section-header .label.new { color: var(--new); }
+    .section-header .label.older { color: var(--muted); }
+    .section-header .line {
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+    }
+    .section-header .count {
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+
+    /* ── "This Week" featured strip ── */
+    .new-strip {
+      position: relative;
+      z-index: 1;
+      padding: 0 16px;
+      margin-bottom: 8px;
+    }
+    .new-strip-inner {
+      background: var(--new-soft);
+      border: 1px solid rgba(232,160,180,0.15);
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .new-strip .masonry { column-gap: 10px; }
+    .new-strip .masonry-item { margin-bottom: 10px; }
+    .new-strip .photo-card { border-radius: 10px; }
+
+    /* ── Masonry grid ── */
+    .masonry-wrap {
+      position: relative;
+      z-index: 1;
+      padding: 0 16px;
+    }
+    .masonry {
+      columns: 2;
+      column-gap: 8px;
+    }
+    @media (min-width: 500px) { .masonry { columns: 3; } }
+    @media (min-width: 800px) { .masonry { columns: 4; } }
+    @media (min-width: 1100px) { .masonry { columns: 5; } }
+
+    .masonry-item {
+      break-inside: avoid;
+      margin-bottom: 8px;
+    }
+
+    /* ── Photo card ── */
+    .photo-card {
       position: relative;
       overflow: hidden;
       cursor: pointer;
-      background: #1a1a1a;
-      border-radius: 6px;
-    }
-    .grid-card img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+      border-radius: 8px;
+      background: var(--surface);
       display: block;
-      transition: transform 0.2s ease;
     }
-    .grid-card:active img { transform: scale(0.95); }
-    .grid-card.is-new {
-      outline: 2px solid #ff6b8a;
-      outline-offset: -2px;
+    .photo-card img,
+    .photo-card video {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .photo-card:hover img,
+    .photo-card:hover video {
+      transform: scale(1.06);
     }
 
-    /* ── NEW badge ── */
-    .badge {
+    /* Hover overlay */
+    .photo-card .overlay {
       position: absolute;
-      top: 8px;
-      right: 8px;
-      background: #ff6b8a;
+      inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(0,0,0,0.72) 0%,
+        rgba(0,0,0,0.2) 40%,
+        transparent 70%
+      );
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 14px 12px;
+    }
+    .photo-card:hover .overlay { opacity: 1; }
+
+    .overlay-date {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.9);
+      letter-spacing: 0.5px;
+      font-weight: 300;
+    }
+
+    /* Video play icon */
+    .video-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px; height: 40px;
+      background: rgba(255,255,255,0.18);
+      backdrop-filter: blur(4px);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      transition: background 0.3s;
+    }
+    .video-icon svg { width: 16px; height: 16px; fill: #fff; margin-left: 2px; }
+    .photo-card:hover .video-icon { background: rgba(255,255,255,0.28); }
+
+    /* NEW badge */
+    .badge-new {
+      position: absolute;
+      top: 9px;
+      left: 9px;
+      background: var(--new);
       color: #fff;
-      font-size: 0.6rem;
-      font-weight: 800;
-      letter-spacing: 1px;
-      padding: 3px 7px;
+      font-size: 0.56rem;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      padding: 3px 8px;
       border-radius: 20px;
       text-transform: uppercase;
       pointer-events: none;
+      box-shadow: 0 2px 8px rgba(232,160,180,0.4);
     }
 
     /* ── Empty state ── */
     .empty {
+      position: relative;
+      z-index: 1;
       text-align: center;
-      padding: 60px 20px;
-      color: #444;
+      padding: 80px 24px;
+      color: var(--muted);
     }
-    .empty p { font-size: 1rem; margin-top: 12px; }
+    .empty-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.3; }
+    .empty p { font-size: 0.9rem; }
+
+    /* ── Footer ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 48px 24px 40px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      margin-top: 48px;
+    }
+    .footer-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .footer-meta {
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
 
     /* ── Lightbox ── */
     #lightbox {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.96);
-      z-index: 1000;
-      flex-direction: column;
+      z-index: 2000;
+      background: rgba(0,0,0,0);
       align-items: center;
       justify-content: center;
-      touch-action: none;
+      transition: background 0.3s ease;
     }
-    #lightbox.open { display: flex; }
+    #lightbox.open {
+      display: flex;
+      background: rgba(0,0,0,0.97);
+    }
 
-    #lb-img {
-      max-width: 100vw;
-      max-height: 85vh;
-      object-fit: contain;
-      border-radius: 6px;
-      user-select: none;
-      -webkit-user-drag: none;
+    #lb-media-wrap {
+      position: relative;
+      max-width: 92vw;
+      max-height: 88vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
+    #lb-img, #lb-video {
+      max-width: 92vw;
+      max-height: 82vh;
+      object-fit: contain;
+      border-radius: 4px;
+      user-select: none;
+      display: block;
+    }
+    #lb-video { display: none; }
 
     #lb-close {
       position: absolute;
-      top: 16px; right: 20px;
-      font-size: 2rem;
+      top: 20px; right: 24px;
+      width: 40px; height: 40px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 50%;
       color: #fff;
+      font-size: 1rem;
       cursor: pointer;
-      line-height: 1;
-      opacity: 0.7;
-      background: none;
-      border: none;
-      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, transform 0.2s;
     }
-    #lb-close:hover { opacity: 1; }
+    #lb-close:hover { background: rgba(255,255,255,0.18); transform: rotate(90deg); }
 
-    #lb-date {
+    #lb-info {
       position: absolute;
-      bottom: 28px;
-      font-size: 0.8rem;
-      color: rgba(255,255,255,0.5);
-      letter-spacing: 0.5px;
+      bottom: 24px;
+      left: 0; right: 0;
+      text-align: center;
+    }
+    #lb-date {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 1px;
+      font-weight: 300;
+    }
+    #lb-counter {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.25);
+      letter-spacing: 1.5px;
+      margin-top: 4px;
+      text-transform: uppercase;
     }
 
-    #lb-prev, #lb-next {
+    .lb-nav {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      background: rgba(255,255,255,0.1);
-      border: none;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
       color: #fff;
-      font-size: 1.6rem;
-      width: 44px;
-      height: 44px;
+      width: 46px; height: 46px;
       border-radius: 50%;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      opacity: 0.6;
+      font-size: 1.2rem;
+      transition: background 0.2s, transform 0.2s;
     }
-    #lb-prev { left: 12px; }
-    #lb-next { right: 12px; }
-    #lb-prev:hover, #lb-next:hover { opacity: 1; background: rgba(255,255,255,0.2); }
+    .lb-nav:hover { background: rgba(255,255,255,0.15); }
+    #lb-prev { left: 16px; }
+    #lb-next { right: 16px; }
+    #lb-prev:hover { transform: translateY(-50%) translateX(-2px); }
+    #lb-next:hover { transform: translateY(-50%) translateX(2px); }
 
-    /* ── Footer ── */
-    footer {
-      text-align: center;
-      padding: 32px 20px;
-      font-size: 0.75rem;
-      color: #333;
+    /* progress bar at top */
+    #lb-progress {
+      position: absolute;
+      top: 0; left: 0;
+      height: 2px;
+      background: var(--accent);
+      transition: width 0.25s ease;
     }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>Aydin <span>♥</span></h1>
-  <p id="subtitle">Loading photos...</p>
+  <div class="header-eyebrow">A private collection</div>
+  <h1>Aydin <em>&amp;</em> the world</h1>
+  <p class="header-sub" id="subtitle">Loading...</p>
 </header>
 
 <main id="main"></main>
 
-<footer id="footer"></footer>
+<footer>
+  <div class="footer-name">Aydin</div>
+  <div class="footer-meta" id="footer-meta"></div>
+</footer>
 
 <!-- Lightbox -->
-<div id="lightbox">
-  <button id="lb-close">&#x2715;</button>
-  <button id="lb-prev">&#x2039;</button>
-  <img id="lb-img" src="" alt="Aydin" />
-  <button id="lb-next">&#x203a;</button>
-  <div id="lb-date"></div>
+<div id="lightbox" role="dialog" aria-modal="true">
+  <div id="lb-progress"></div>
+  <button id="lb-close" aria-label="Close">&#x2715;</button>
+  <button class="lb-nav" id="lb-prev" aria-label="Previous">&#x2039;</button>
+  <div id="lb-media-wrap">
+    <img id="lb-img" src="" alt="Aydin" />
+    <video id="lb-video" controls playsinline></video>
+  </div>
+  <button class="lb-nav" id="lb-next" aria-label="Next">&#x203a;</button>
+  <div id="lb-info">
+    <div id="lb-date"></div>
+    <div id="lb-counter"></div>
+  </div>
 </div>
 
 <script>
   const ONE_DAY = 86400000;
   const NOW = Date.now();
-
   let allPhotos = [];
   let lbIndex = 0;
 
   function formatDate(isoStr) {
     const d = new Date(isoStr);
-    return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+    return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
   }
 
   function isNew(isoStr) {
     return (NOW - new Date(isoStr).getTime()) < 7 * ONE_DAY;
   }
 
+  function isVideo(photo) {
+    return photo.type === 'video' || /\.mp4$/i.test(photo.path);
+  }
+
+  // ── Lightbox ──
   function openLightbox(index) {
     lbIndex = index;
     renderLightbox();
-    document.getElementById("lightbox").classList.add("open");
-    document.body.style.overflow = "hidden";
+    document.getElementById('lightbox').classList.add('open');
+    document.body.style.overflow = 'hidden';
   }
 
   function closeLightbox() {
-    document.getElementById("lightbox").classList.remove("open");
-    document.body.style.overflow = "";
+    const lb = document.getElementById('lightbox');
+    lb.classList.remove('open');
+    document.body.style.overflow = '';
+    const vid = document.getElementById('lb-video');
+    vid.pause();
+    vid.src = '';
   }
 
   function renderLightbox() {
     const photo = allPhotos[lbIndex];
-    document.getElementById("lb-img").src = photo.path;
-    document.getElementById("lb-date").textContent = formatDate(photo.date);
+    const vid = document.getElementById('lb-video');
+    const img = document.getElementById('lb-img');
+
+    if (isVideo(photo)) {
+      img.style.display = 'none';
+      vid.style.display = 'block';
+      vid.src = photo.path;
+      vid.play();
+    } else {
+      vid.style.display = 'none';
+      vid.pause(); vid.src = '';
+      img.style.display = 'block';
+      img.src = photo.path;
+    }
+
+    document.getElementById('lb-date').textContent = formatDate(photo.date);
+    document.getElementById('lb-counter').textContent = `${lbIndex + 1} of ${allPhotos.length}`;
+    document.getElementById('lb-progress').style.width = `${((lbIndex + 1) / allPhotos.length) * 100}%`;
   }
 
   function prevPhoto() {
     lbIndex = (lbIndex - 1 + allPhotos.length) % allPhotos.length;
     renderLightbox();
   }
-
   function nextPhoto() {
     lbIndex = (lbIndex + 1) % allPhotos.length;
     renderLightbox();
   }
 
-  // Swipe support
+  // Swipe
   let touchStartX = 0;
-  document.getElementById("lightbox").addEventListener("touchstart", e => {
+  document.getElementById('lightbox').addEventListener('touchstart', e => {
     touchStartX = e.touches[0].clientX;
   }, { passive: true });
-  document.getElementById("lightbox").addEventListener("touchend", e => {
+  document.getElementById('lightbox').addEventListener('touchend', e => {
     const dx = e.changedTouches[0].clientX - touchStartX;
     if (Math.abs(dx) > 50) dx < 0 ? nextPhoto() : prevPhoto();
   }, { passive: true });
 
-  document.getElementById("lb-close").addEventListener("click", closeLightbox);
-  document.getElementById("lb-prev").addEventListener("click", prevPhoto);
-  document.getElementById("lb-next").addEventListener("click", nextPhoto);
-  document.getElementById("lightbox").addEventListener("click", e => {
-    if (e.target === document.getElementById("lightbox")) closeLightbox();
+  document.getElementById('lb-close').addEventListener('click', closeLightbox);
+  document.getElementById('lb-prev').addEventListener('click', prevPhoto);
+  document.getElementById('lb-next').addEventListener('click', nextPhoto);
+  document.getElementById('lightbox').addEventListener('click', e => {
+    if (e.target === document.getElementById('lightbox')) closeLightbox();
+  });
+  document.addEventListener('keydown', e => {
+    if (!document.getElementById('lightbox').classList.contains('open')) return;
+    if (e.key === 'ArrowLeft') prevPhoto();
+    if (e.key === 'ArrowRight') nextPhoto();
+    if (e.key === 'Escape') closeLightbox();
   });
 
-  document.addEventListener("keydown", e => {
-    if (!document.getElementById("lightbox").classList.contains("open")) return;
-    if (e.key === "ArrowLeft") prevPhoto();
-    if (e.key === "ArrowRight") nextPhoto();
-    if (e.key === "Escape") closeLightbox();
-  });
+  // ── Card builder ──
+  function buildCard(photo, globalIndex, showBadge) {
+    const wrap = document.createElement('div');
+    wrap.className = 'masonry-item';
 
-  function buildCard(photo, index) {
-    const div = document.createElement("div");
-    div.className = "grid-card";
-    if (isNew(photo.date)) div.classList.add("is-new");
-    div.addEventListener("click", () => openLightbox(index));
+    const card = document.createElement('div');
+    card.className = 'photo-card';
+    card.addEventListener('click', () => openLightbox(globalIndex));
 
-    const img = document.createElement("img");
-    img.src = photo.path;
-    img.alt = "Aydin";
-    img.loading = "lazy";
-    div.appendChild(img);
+    if (isVideo(photo)) {
+      const vid = document.createElement('video');
+      vid.src = photo.path;
+      vid.muted = true;
+      vid.preload = 'metadata';
+      vid.style.pointerEvents = 'none';
+      card.appendChild(vid);
 
-    if (isNew(photo.date)) {
-      const badge = document.createElement("div");
-      badge.className = "badge";
-      badge.textContent = "NEW";
-      div.appendChild(badge);
+      const icon = document.createElement('div');
+      icon.className = 'video-icon';
+      icon.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`;
+      card.appendChild(icon);
+    } else {
+      const img = document.createElement('img');
+      img.src = photo.path;
+      img.alt = 'Aydin';
+      img.loading = 'lazy';
+      card.appendChild(img);
     }
 
-    return div;
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay';
+    const dateEl = document.createElement('div');
+    dateEl.className = 'overlay-date';
+    dateEl.textContent = formatDate(photo.date);
+    overlay.appendChild(dateEl);
+    card.appendChild(overlay);
+
+    if (showBadge) {
+      const badge = document.createElement('div');
+      badge.className = 'badge-new';
+      badge.textContent = 'New';
+      card.appendChild(badge);
+    }
+
+    wrap.appendChild(card);
+    return wrap;
   }
 
+  // ── Load & render ──
   async function load() {
     try {
-      const res = await fetch("photos.json?" + NOW);
+      const res = await fetch('photos.json?' + NOW);
       allPhotos = await res.json();
 
       if (allPhotos.length === 0) {
-        document.getElementById("subtitle").textContent = "No photos yet";
-        document.getElementById("main").innerHTML =
-          '<div class="empty"><p>Photos will appear here once fetched.</p></div>';
+        document.getElementById('subtitle').textContent = 'No photos yet';
+        document.getElementById('main').innerHTML =
+          '<div class="empty"><div class="empty-icon">🌱</div><p>Photos will appear here once fetched.</p></div>';
         return;
       }
 
-      const newPhotos = allPhotos.filter(p => isNew(p.date));
+      const newPhotos  = allPhotos.filter(p => isNew(p.date));
       const olderPhotos = allPhotos.filter(p => !isNew(p.date));
 
-      document.getElementById("subtitle").textContent =
-        `${allPhotos.length} photo${allPhotos.length !== 1 ? "s" : ""}`;
+      document.getElementById('subtitle').textContent =
+        `${allPhotos.length} moment${allPhotos.length !== 1 ? 's' : ''} captured`;
 
-      const main = document.getElementById("main");
-      main.innerHTML = "";
+      const main = document.getElementById('main');
+      main.innerHTML = '';
 
-      // This Week section
+      // ── This Week ──
       if (newPhotos.length > 0) {
-        const label = document.createElement("div");
-        label.className = "section-label new";
-        label.textContent = "This Week";
-        main.appendChild(label);
+        const sh = document.createElement('div');
+        sh.className = 'section-header';
+        sh.innerHTML = `
+          <span class="label new">This week</span>
+          <span class="line"></span>
+          <span class="count">${newPhotos.length} new</span>`;
+        main.appendChild(sh);
 
-        const grid = document.createElement("div");
-        grid.className = "grid";
-        newPhotos.forEach(p => grid.appendChild(buildCard(p, allPhotos.indexOf(p))));
-        main.appendChild(grid);
+        const strip = document.createElement('div');
+        strip.className = 'new-strip';
+        const inner = document.createElement('div');
+        inner.className = 'new-strip-inner';
+        const masonry = document.createElement('div');
+        masonry.className = 'masonry';
+        newPhotos.forEach(p => masonry.appendChild(buildCard(p, allPhotos.indexOf(p), true)));
+        inner.appendChild(masonry);
+        strip.appendChild(inner);
+        main.appendChild(strip);
       }
 
-      // Older photos
+      // ── All photos ──
       if (olderPhotos.length > 0) {
-        const label = document.createElement("div");
-        label.className = "section-label";
-        label.textContent = "Earlier";
-        main.appendChild(label);
+        const sh = document.createElement('div');
+        sh.className = 'section-header';
+        sh.innerHTML = `
+          <span class="label older">Earlier memories</span>
+          <span class="line"></span>
+          <span class="count">${olderPhotos.length}</span>`;
+        main.appendChild(sh);
 
-        const grid = document.createElement("div");
-        grid.className = "grid";
-        olderPhotos.forEach(p => grid.appendChild(buildCard(p, allPhotos.indexOf(p))));
-        main.appendChild(grid);
+        const wrap = document.createElement('div');
+        wrap.className = 'masonry-wrap';
+        const masonry = document.createElement('div');
+        masonry.className = 'masonry';
+        olderPhotos.forEach(p => masonry.appendChild(buildCard(p, allPhotos.indexOf(p), false)));
+        wrap.appendChild(masonry);
+        main.appendChild(wrap);
       }
 
-      document.getElementById("footer").textContent =
-        `Last updated ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`;
+      document.getElementById('footer-meta').textContent =
+        `Updated ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
 
     } catch (err) {
-      document.getElementById("subtitle").textContent = "Could not load photos";
+      document.getElementById('subtitle').textContent = 'Could not load photos';
       console.error(err);
     }
   }
