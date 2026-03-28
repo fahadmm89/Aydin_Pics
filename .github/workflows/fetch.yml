@@ -1,0 +1,40 @@
+name: Fetch Aydin Photos
+
+on:
+  schedule:
+    - cron: '0 14 * * 2,4'   # Every Tuesday and Thursday at 9am ET (14:00 UTC)
+  workflow_dispatch:           # Allow manual runs from GitHub
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install google-auth google-auth-oauthlib google-api-python-client requests
+
+      - name: Write credentials from secrets
+        run: |
+          echo '${{ secrets.GMAIL_CREDENTIALS }}' > client_secret.json
+          echo '${{ secrets.GMAIL_TOKEN }}' > token.json
+
+      - name: Run fetch script
+        run: python fetch_photos.py
+        env:
+          CREDENTIALS_OVERRIDE: client_secret.json
+
+      - name: Commit and push new photos
+        run: |
+          git config user.name "Aydin Bot"
+          git config user.email "bot@aydin-pics.local"
+          git add photos/ photos.json
+          git diff --cached --quiet || git commit -m "Add new Aydin photos $(date +'%Y-%m-%d')"
+          git push

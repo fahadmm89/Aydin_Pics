@@ -12,10 +12,12 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
 # --- Config ---
+import os
 SENDER = "updates@tadpoles.com"
 PHOTOS_DIR = Path(__file__).parent / "photos"
 PHOTOS_JSON = Path(__file__).parent / "photos.json"
-CREDENTIALS_FILE = next(Path(__file__).parent.glob("client_secret_*.json"), None)
+_override = os.environ.get("CREDENTIALS_OVERRIDE")
+CREDENTIALS_FILE = Path(_override) if _override else next(Path(__file__).parent.glob("client_secret_*.json"), None)
 TOKEN_FILE = Path(__file__).parent / "token.json"
 SCOPES = ["https://www.googleapis.com/auth/gmail.modify"]
 
