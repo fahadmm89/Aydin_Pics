@@ -148,29 +148,50 @@ def update_photos_json(new_photos):
 
 def cleanup_existing_photos():
     """Remove junk photos already in folder and rebuild photos.json."""
+    import hashlib
     print("Cleaning up existing photos...")
     removed = 0
     kept = []
-    for img_file in sorted(PHOTOS_DIR.rglob("*.jpg")):
-        img_bytes = img_file.read_bytes()
-        if is_real_photo(img_bytes):
-            rel_path = img_file.relative_to(Path(__file__).parent)
-            try:
-                dt = datetime.strptime(img_file.stem[:19], "%Y-%m-%d_%H-%M-%S")
-            except Exception:
-                dt = datetime.fromtimestamp(img_file.stat().st_mtime)
-            kept.append({
-                "path": str(rel_path).replace("\\", "/"),
-                "date": dt.isoformat(),
-                "filename": img_file.name
-            })
-        else:
-            img_file.unlink()
+    seen_hashes = set()
+
+    all_files = sorted(PHOTOS_DIR.rglob("*.jpg")) + sorted(PHOTOS_DIR.rglob("*.mp4"))
+
+    for media_file in all_files:
+        img_bytes = media_file.read_bytes()
+        is_video = media_file.suffix.lower() == ".mp4"
+
+        if not is_video and not is_real_photo(img_bytes):
+            media_file.unlink()
             removed += 1
+            continue
+
+        # Deduplicate by content hash
+        content_hash = hashlib.md5(img_bytes).hexdigest()
+        if content_hash in seen_hashes:
+            media_file.unlink()
+            removed += 1
+            continue
+        seen_hashes.add(content_hash)
+
+        rel_path = media_file.relative_to(Path(__file__).parent)
+        try:
+            dt = datetime.strptime(media_file.stem[:19], "%Y-%m-%d_%H-%M-%S")
+        except Exception:
+            dt = datetime.fromtimestamp(media_file.stat().st_mtime)
+
+        entry = {
+            "path": str(rel_path).replace("\\", "/"),
+            "date": dt.isoformat(),
+            "filename": media_file.name
+        }
+        if is_video:
+            entry["type"] = "video"
+        kept.append(entry)
+
     kept.sort(key=lambda x: x["date"], reverse=True)
     with open(PHOTOS_JSON, "w") as f:
         json.dump(kept, f, indent=2)
-    print(f"  Removed {removed} junk, kept {len(kept)} real photos\n")
+    print(f"  Removed {removed} junk/dupes, kept {len(kept)} media files\n")
 
 def main():
     if not CREDENTIALS_FILE:
