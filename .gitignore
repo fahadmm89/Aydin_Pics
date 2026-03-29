@@ -1,4 +1,6 @@
 client_secret_*.json
 token.json
+tadpoles_cookies.json
+tadpoles_cookie.txt
 __pycache__/
 *.pyc
