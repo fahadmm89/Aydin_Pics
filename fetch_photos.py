@@ -234,13 +234,23 @@ def main():
         for i, (source, data, mime) in enumerate(images):
             ext = "jpg" if "jpeg" in mime or "jpg" in mime else mime.split("/")[-1]
             if source == "url":
-                try:
-                    response = requests.get(data, timeout=15)
-                    if response.status_code != 200:
-                        continue
-                    img_bytes = response.content
-                except Exception as e:
-                    print(f"  Failed to download: {e}")
+                img_bytes = None
+                for attempt in range(1, 4):
+                    try:
+                        response = requests.get(data, timeout=20)
+                        if response.status_code == 200:
+                            img_bytes = response.content
+                            break
+                        else:
+                            print(f"  HTTP {response.status_code} on attempt {attempt}, skipping")
+                            break
+                    except Exception as e:
+                        print(f"  Download attempt {attempt} failed: {e}")
+                        if attempt < 3:
+                            import time
+                            time.sleep(2 ** attempt)  # 2s, then 4s
+                if img_bytes is None:
+                    print(f"  Giving up after 3 attempts")
                     continue
             else:
                 img_bytes = data
