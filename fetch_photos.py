@@ -23,7 +23,7 @@ SCOPES = ["https://www.googleapis.com/auth/gmail.modify"]
 
 # Known logo/junk image sizes in bytes — same files repeated in every email
 KNOWN_JUNK_SIZES = {42, 5854, 9430, 23429, 27234, 45580}
-MIN_PHOTO_SIZE = 30_000  # 30KB minimum — real photos are always larger
+MIN_PHOTO_SIZE = 20_000  # 20KB minimum — Tadpoles email photos can be ~29KB
 
 def is_real_photo(img_bytes):
     size = len(img_bytes)
@@ -84,6 +84,16 @@ def get_images_from_email(service, msg_id):
     message = service.users().messages().get(userId="me", id=msg_id, format="full").execute()
     images = []
 
+    def extract_urls_from_html(html):
+        urls = re.findall(r'<img[^>]+src=["\']([^"\']+)["\']', html, re.IGNORECASE)
+        for url in urls:
+            if not url.startswith("http") or url.endswith(".gif"):
+                continue
+            # Skip known branding/layout images
+            if any(x in url for x in ["/logo.", "/header", "/footer", "spgo.tadpoles.com"]):
+                continue
+            images.append(("url", url, "image/jpeg"))
+
     def walk_parts(parts):
         for part in parts:
             mime = part.get("mimeType", "")
@@ -95,16 +105,19 @@ def get_images_from_email(service, msg_id):
                 data = part.get("body", {}).get("data")
                 if data:
                     html = base64.urlsafe_b64decode(data).decode("utf-8", errors="ignore")
-                    urls = re.findall(r'<img[^>]+src=["\']([^"\']+)["\']', html, re.IGNORECASE)
-                    for url in urls:
-                        if url.startswith("http") and not url.endswith(".gif"):
-                            images.append(("url", url, "image/jpeg"))
+                    extract_urls_from_html(html)
             if "parts" in part:
                 walk_parts(part["parts"])
 
     payload = message.get("payload", {})
     if "parts" in payload:
         walk_parts(payload["parts"])
+    elif payload.get("mimeType", "") == "text/html":
+        # Single-part HTML email — content is directly in payload body
+        data = payload.get("body", {}).get("data")
+        if data:
+            html = base64.urlsafe_b64decode(data).decode("utf-8", errors="ignore")
+            extract_urls_from_html(html)
     elif payload.get("mimeType", "").startswith("image/"):
         data = payload.get("body", {}).get("data")
         if data:
