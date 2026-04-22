@@ -35,6 +35,6 @@ jobs:
         run: |
           git config user.name "Aydin Bot"
           git config user.email "bot@aydin-pics.local"
-          git add photos/ photos.json token.json
+          git add photos/ photos.json
           git diff --cached --quiet || git commit -m "Add new Aydin photos $(date +'%Y-%m-%d')"
           git push
